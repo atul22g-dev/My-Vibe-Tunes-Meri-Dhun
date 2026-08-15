@@ -15,6 +15,9 @@ export default function MoodSwitcher() {
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
 
+  // Data load hone tak switcher dikhana zaroori nahi
+  if (!moods.length) return null
+
   return (
     <div ref={ref} className="fixed right-16 top-5 z-[101] max-sm:right-14">
       <button

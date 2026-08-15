@@ -59,15 +59,6 @@ body {
   }
 }
 
-@keyframes wave-move {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 .star {
   position: absolute;
   border-radius: 9999px;
@@ -85,12 +76,6 @@ body {
   animation: shooting-star 9s linear infinite;
 }
 
-.wave-anim {
-  display: flex;
-  width: 200%;
-  animation: wave-move 14s linear infinite;
-}
-
 /* === GRAIN OVERLAY === */
 .grain {
   position: fixed;
@@ -101,6 +86,59 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
   background-repeat: repeat;
   mix-blend-mode: overlay;
+}
+
+/* === VOLUME SLIDER (custom track + thumb, seek-bar style) === */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+}
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid var(--color-accent);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+}
+.volume-slider:active::-webkit-slider-thumb {
+  transform: scale(1.35);
+}
+.volume-slider:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(241, 196, 15, 0.35);
+}
+.volume-slider::-moz-range-track {
+  background: transparent;
+}
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid var(--color-accent);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.volume-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+}
+.volume-slider:focus-visible {
+  outline: 1px solid rgba(241, 196, 15, 0.5);
+  outline-offset: 3px;
 }
 
 /* === SCROLLBARS === */

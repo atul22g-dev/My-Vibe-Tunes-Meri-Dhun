@@ -1,15 +1,25 @@
 import { usePlayer } from '../context/PlayerContext'
 
 export default function PlaylistSection() {
-  const { playlistIds, songNames, currentSongIndex, playerReady, playerError, controls, queueActions } =
-    usePlayer()
+  const {
+    playlistIds,
+    songNames,
+    currentSongIndex,
+    playerReady,
+    playerError,
+    controls,
+    queueActions,
+    dataError,
+  } = usePlayer()
 
   return (
     <section className="mb-12">
       <h2 className="mb-5 text-[1.1rem] opacity-90">🎵 Poori Playlist</h2>
 
-      {playerError ? (
-        <p className="py-8 text-center text-sm opacity-40">{playerError}</p>
+      {playerError || dataError ? (
+        <p className="py-8 text-center text-sm opacity-40">
+          {playerError || `Playlists load nahi hue: ${dataError}`}
+        </p>
       ) : !playerReady || playlistIds.length === 0 ? (
         <p className="py-8 text-center text-sm opacity-40">Loading new playlist...</p>
       ) : (

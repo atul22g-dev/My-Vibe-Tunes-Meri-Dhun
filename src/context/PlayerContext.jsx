@@ -1,11 +1,29 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { getDefaultMoodId, moods } from '../config'
+import { fetchPlaylists } from '../api/playlists'
 
 const PlayerContext = createContext(null)
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function usePlayer() {
   return useContext(PlayerContext)
+}
+
+const DEFAULT_SITE = {
+  title: 'My Vibe Tunes - Meri Dhun',
+  homeUrl: 'https://github.com/atual-dev',
+}
+
+// Data load hone tak player bina playlist ke create na ho
+const EMPTY_MOOD = {
+  id: 'loading',
+  name: '',
+  label: '',
+  emoji: '🎵',
+  playlistId: '',
+  songs: [],
+  liveText: '',
+  quotes: [''],
+  tagline: '',
 }
 
 const YT_STATES = { ENDED: 0, PLAYING: 1, PAUSED: 2, CUED: 5 }
@@ -33,12 +51,48 @@ function ensureYT() {
 }
 
 export function PlayerProvider({ children }) {
-  // Current mood (theme) - restored from localStorage if it still exists
-  const [currentMoodId, setCurrentMoodId] = useState(() => {
-    const saved = localStorage.getItem('bus-playlist-theme')
-    return saved && moods.some((m) => m.id === saved) ? saved : getDefaultMoodId()
-  })
-  const mood = moods.find((m) => m.id === currentMoodId) || moods[0]
+  // Site + playlists - API se fetch hota hai (src/api/playlists.js)
+  const [site, setSite] = useState(DEFAULT_SITE)
+  const [moods, setMoods] = useState([])
+  const [dataLoading, setDataLoading] = useState(true)
+  const [dataError, setDataError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchPlaylists()
+      .then((data) => {
+        if (cancelled) return
+        if (data.site && (data.site.title || data.site.homeUrl)) {
+          setSite({ ...DEFAULT_SITE, ...data.site })
+        }
+        setMoods(data.moods)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setDataError(err instanceof Error ? err.message : String(err))
+      })
+      .finally(() => {
+        if (!cancelled) setDataLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Current mood (theme) - localStorage se restore, warna pehli entry
+  const [currentMoodId, setCurrentMoodId] = useState(
+    () => localStorage.getItem('bus-playlist-theme') || '',
+  )
+
+  // Moods load hone ke baad saved id valid hai toh use karo, warna pehla mood
+  useEffect(() => {
+    if (!moods.length) return
+    if (!moods.some((m) => m.id === currentMoodId)) {
+      setCurrentMoodId(moods[0].id)
+    }
+  }, [moods, currentMoodId])
+
+  const mood = moods.find((m) => m.id === currentMoodId) || moods[0] || EMPTY_MOOD
 
   // Player / playlist
   const playerRef = useRef(null)
@@ -63,7 +117,23 @@ export function PlayerProvider({ children }) {
   const queueIndexRef = useRef(0)
 
   // Quote
-  const [quote, setQuote] = useState(() => randomFrom(mood.quotes))
+  const [quote, setQuote] = useState(() => randomFrom(EMPTY_MOOD.quotes))
+
+  // Volume (0-100) - localStorage se restore, warna 80%
+  const [volume, setVolumeState] = useState(() => {
+    const raw = localStorage.getItem('bus-player-volume')
+    const saved = raw === null ? NaN : Number(raw)
+    return Number.isFinite(saved) && saved >= 0 && saved <= 100 ? saved : 80
+  })
+  const [muted, setMuted] = useState(false)
+  const volumeRef = useRef(volume)
+  const mutedRef = useRef(muted)
+  useEffect(() => {
+    volumeRef.current = volume
+  }, [volume])
+  useEffect(() => {
+    mutedRef.current = muted
+  }, [muted])
 
   // Song name fetching
   const inProgressRef = useRef(new Set())
@@ -116,6 +186,7 @@ export function PlayerProvider({ children }) {
 
     // playlistId se poori playlist, ya songs array se fixed list
     const list = mood.songs && mood.songs.length > 0 ? mood.songs.join(',') : mood.playlistId
+    if (!list) return // API data abhi tak nahi aaya
 
     function waitForPlaylist(attempts) {
       if (disposed) return
@@ -132,6 +203,9 @@ export function PlayerProvider({ children }) {
         }
         setPlayerReady(true)
         updateSongDisplay()
+        // Naye (recreated) player par saved volume + mute state apply karo
+        if (typeof p.setVolume === 'function') p.setVolume(volumeRef.current)
+        if (mutedRef.current && typeof p.mute === 'function') p.mute()
         return
       }
       if (attempts > 20) {
@@ -289,16 +363,48 @@ export function PlayerProvider({ children }) {
 
       localStorage.setItem('bus-playlist-theme', id)
     },
-    [currentMoodId],
+    [currentMoodId, moods],
   )
 
   // --- QUOTES (rotate every 5s, new mood quote instantly) ---
   useEffect(() => {
+    if (!mood.quotes || !mood.quotes.length) return
     setQuote(randomFrom(mood.quotes))
     const id = setInterval(() => setQuote(randomFrom(mood.quotes)), 5000)
     return () => clearInterval(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mood.id])
+
+  // --- VOLUME CONTROLS ---
+  const setVolume = useCallback((v) => {
+    const clamped = Math.max(0, Math.min(100, Math.round(v)))
+    setVolumeState(clamped)
+    volumeRef.current = clamped
+    localStorage.setItem('bus-player-volume', String(clamped))
+    const p = playerRef.current
+    if (p && typeof p.setVolume === 'function') p.setVolume(clamped)
+    // Volume 0 se upar le jaane par mute hat jaye
+    if (clamped > 0 && mutedRef.current) {
+      setMuted(false)
+      mutedRef.current = false
+      if (p && typeof p.unMute === 'function') p.unMute()
+    }
+  }, [])
+
+  const toggleMute = useCallback(() => {
+    const p = playerRef.current
+    if (!p) return
+    if (mutedRef.current) {
+      setMuted(false)
+      mutedRef.current = false
+      if (typeof p.unMute === 'function') p.unMute()
+      if (typeof p.setVolume === 'function') p.setVolume(volumeRef.current)
+    } else {
+      setMuted(true)
+      mutedRef.current = true
+      if (typeof p.mute === 'function') p.mute()
+    }
+  }, [])
 
   // --- CONTROLS ---
   const togglePlay = useCallback(() => {
@@ -387,6 +493,9 @@ export function PlayerProvider({ children }) {
   }, [playFromQueue])
 
   const value = {
+    site,
+    dataLoading,
+    dataError,
     moods,
     mood,
     currentMoodId,
@@ -395,6 +504,8 @@ export function PlayerProvider({ children }) {
     playerReady,
     playerError,
     isPlaying,
+    volume,
+    muted,
     songTitle,
     songArtist,
     albumArt,
@@ -405,7 +516,7 @@ export function PlayerProvider({ children }) {
     queueMode,
     queueIndex,
     playerRef,
-    controls: { togglePlay, next, prev, shuffle, seekTo, playSongAt },
+    controls: { togglePlay, next, prev, shuffle, seekTo, playSongAt, setVolume, toggleMute },
     queueActions: { addToQueue, removeFromQueue, clearQueue, playQueue },
   }
 
