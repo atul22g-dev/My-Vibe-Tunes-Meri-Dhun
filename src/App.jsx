@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
-import { site } from './config'
-import { PlayerProvider } from './context/PlayerContext'
+import { usePlayer } from './context/PlayerContext'
 import GrainOverlay from './components/GrainOverlay'
 import TopBar from './components/TopBar'
 import MoodSwitcher from './components/MoodSwitcher'
@@ -10,13 +9,15 @@ import QueueSection from './components/QueueSection'
 import Footer from './components/Footer'
 
 export default function App() {
-  // Browser tab title config se (index.html ke saath match kare)
+  const { site } = usePlayer()
+
+  // Browser tab title API data se (index.html ke saath match kare)
   useEffect(() => {
-    document.title = site.title
-  }, [])
+    document.title = site.title || 'My Vibe Tunes - Meri Dhun'
+  }, [site.title])
 
   return (
-    <PlayerProvider>
+    <>
       <GrainOverlay />
       <TopBar />
       <MoodSwitcher />
@@ -30,6 +31,6 @@ export default function App() {
           <Footer />
         </div>
       </section>
-    </PlayerProvider>
+    </>
   )
 }
