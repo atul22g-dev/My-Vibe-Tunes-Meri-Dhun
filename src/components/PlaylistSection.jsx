@@ -30,12 +30,15 @@ export default function PlaylistSection() {
             return (
               <li
                 key={videoId}
-                className={`flex cursor-pointer items-center justify-between rounded-xl border border-white/10 border-l-[3px] border-l-transparent bg-[rgba(10,10,40,0.75)] px-5 py-4 transition-colors hover:border-accent hover:border-l-accent ${
+                className={`flex items-center justify-between rounded-xl border border-white/10 border-l-[3px] border-l-transparent bg-[rgba(10,10,40,0.75)] px-5 py-4 transition-colors hover:border-accent hover:border-l-accent ${
                   active ? 'border-accent border-l-accent bg-accent/5' : ''
                 }`}
-                onClick={() => controls.playSongAt(i)}
               >
-                <div className="flex min-w-0 flex-1 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => controls.playSongAt(i)}
+                  className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left"
+                >
                   <img
                     src={`https://img.youtube.com/vi/${videoId}/default.jpg`}
                     alt=""
@@ -44,16 +47,13 @@ export default function PlaylistSection() {
                   <span className={`truncate text-sm font-semibold ${active ? 'text-accent' : ''}`}>
                     {name}
                   </span>
-                </div>
-                {active && <span className="mr-2 text-[0.75rem] opacity-40">▶ Playing</span>}
+                  {active && <span className="ml-auto text-[0.75rem] opacity-40">▶ Playing</span>}
+                </button>
                 <button
                   type="button"
                   title="Add to queue"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    queueActions.addToQueue(videoId, name)
-                  }}
-                  className="ml-2 flex size-6.5 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/15 text-base text-accent transition-all hover:scale-110 hover:border-accent hover:bg-accent/15"
+                  onClick={() => queueActions.addToQueue(videoId, name)}
+                  className="ml-2 flex size-6.5 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/15 text-base text-accent transition-[transform,border-color,background-color] hover:scale-110 hover:border-accent hover:bg-accent/15"
                 >
                   +
                 </button>

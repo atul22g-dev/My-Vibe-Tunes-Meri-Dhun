@@ -30,7 +30,7 @@ export default function MoodSwitcher() {
       </button>
 
       <div
-        className={`absolute right-0 top-[50px] flex max-h-[70vh] min-w-[180px] flex-col gap-1.5 overflow-y-auto rounded-[14px] border border-white/10 bg-black/75 p-2.5 backdrop-blur-xl transition-all duration-300 ${
+        className={`absolute right-0 top-[50px] flex max-h-[70vh] min-w-[180px] flex-col gap-1.5 overflow-y-auto rounded-[14px] border border-white/10 bg-black/75 p-2.5 backdrop-blur-xl transition-[transform,opacity] duration-300 ${
           open
             ? 'pointer-events-auto translate-y-0 scale-100 opacity-100'
             : 'pointer-events-none -translate-y-2.5 scale-95 opacity-0'

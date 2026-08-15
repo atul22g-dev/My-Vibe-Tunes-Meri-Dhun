@@ -23,7 +23,7 @@ export default function QueueSection() {
         <ul className="queue-scroll mb-4 flex max-h-[220px] list-none flex-col gap-1.5 overflow-y-auto">
           {userQueue.map((item, i) => (
             <li
-              key={`${item.videoId}-${i}`}
+              key={item.id}
               className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/3 px-4 py-2.5 text-[0.85rem]"
             >
               <span className="min-w-[20px] text-[0.7rem] opacity-40">{i + 1}.</span>
@@ -46,7 +46,7 @@ export default function QueueSection() {
           type="button"
           onClick={queueActions.playQueue}
           disabled={userQueue.length === 0}
-          className="flex-1 cursor-pointer rounded-lg border border-accent bg-accent/10 px-4 py-2.5 text-[0.85rem] font-semibold text-accent transition-all hover:-translate-y-0.5 hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex-1 cursor-pointer rounded-lg border border-accent bg-accent/10 px-4 py-2.5 text-[0.85rem] font-semibold text-accent transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
           ▶ Play Queue
         </button>
@@ -54,7 +54,7 @@ export default function QueueSection() {
           type="button"
           onClick={queueActions.clearQueue}
           disabled={userQueue.length === 0}
-          className="flex-1 cursor-pointer rounded-lg border border-[#e74c3c] bg-[#e74c3c]/10 px-4 py-2.5 text-[0.85rem] font-semibold text-[#e74c3c] transition-all hover:-translate-y-0.5 hover:bg-[#e74c3c]/20 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex-1 cursor-pointer rounded-lg border border-[#e74c3c] bg-[#e74c3c]/10 px-4 py-2.5 text-[0.85rem] font-semibold text-[#e74c3c] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[#e74c3c]/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
           🗑 Clear
         </button>

@@ -1,12 +1,10 @@
 import { usePlayer } from '../context/PlayerContext'
 import { useClock } from '../hooks/useClock'
-import { useLiveUsers } from '../hooks/useLiveUsers'
 import VolumeIcon from './VolumeIcon'
 
 export default function TopBar() {
-  const { mood, volume, muted, controls } = usePlayer()
+  const { volume, muted, controls } = usePlayer()
   const time = useClock()
-  const liveUsers = useLiveUsers()
 
   return (
     <header className="fixed inset-x-0 top-0 z-[100] flex items-center justify-between px-10 py-5 max-sm:px-5">
@@ -17,7 +15,7 @@ export default function TopBar() {
         <button
           type="button"
           onClick={controls.toggleMute}
-          className="cursor-pointer text-white/80 transition-all hover:scale-110 hover:text-white"
+          className="cursor-pointer text-white/80 transition-[transform,color] hover:scale-110 hover:text-white"
           title={muted || volume === 0 ? 'Unmute' : 'Mute'}
         >
           <VolumeIcon volume={volume} muted={muted} />

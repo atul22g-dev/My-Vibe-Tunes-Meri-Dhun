@@ -28,6 +28,16 @@ function songToVideoId(song) {
   return ''
 }
 
+// Convert + falsy drop ek hi pass mein (map().filter() ki jagah plain loop)
+function songIds(songs) {
+  const ids = []
+  for (const song of songs) {
+    const id = songToVideoId(song)
+    if (id) ids.push(id)
+  }
+  return ids
+}
+
 function normalizeMood(raw) {
   return {
     id: String(pick(raw, ['id', 'key', 'slug', 'name'])).trim(),
@@ -35,9 +45,7 @@ function normalizeMood(raw) {
     label: pick(raw, ['label', 'shortName', 'short_name', 'name', 'title'], ''),
     emoji: pick(raw, ['emoji', 'icon'], '🎵'),
     playlistId: pick(raw, ['playlistId', 'playlist_id', 'youtubePlaylistId', 'playlist'], ''),
-    songs: Array.isArray(raw.songs)
-      ? raw.songs.map(songToVideoId).filter(Boolean)
-      : [],
+    songs: Array.isArray(raw.songs) ? songIds(raw.songs) : [],
     liveText: pick(raw, ['liveText', 'live_text', 'subtitle', 'description'], ''),
     quotes: Array.isArray(raw.quotes) ? raw.quotes.map(String) : [],
     tagline: pick(raw, ['tagline', 'subtitle'], ''),
@@ -68,14 +76,18 @@ function normalizePlaylists(payload) {
     }
   }
 
+  const moods = []
+  for (const raw of rawMoods) {
+    const m = normalizeMood(raw)
+    if (m.id && (m.playlistId || m.songs.length > 0)) moods.push(m)
+  }
+
   return {
     site: {
       title: pick(rawSite, ['title', 'name'], ''),
       homeUrl: pick(rawSite, ['homeUrl', 'home_url', 'url', 'github'], ''),
     },
-    moods: rawMoods
-      .map(normalizeMood)
-      .filter((m) => m.id && (m.playlistId || m.songs.length > 0)),
+    moods,
   }
 }
 

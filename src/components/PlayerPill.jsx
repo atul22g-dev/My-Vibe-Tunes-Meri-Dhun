@@ -28,9 +28,25 @@ export default function PlayerPill() {
   const pct = progress.total > 0 ? (progress.current / progress.total) * 100 : 0
 
   const onBarClick = (e) => {
+    // Keyboard activation (Enter/Space) fires a synthetic click with no pointer
+    // position — arrow keys handle keyboard seeking in onBarKeyDown.
+    if (e.detail === 0) return
     const rect = barRef.current.getBoundingClientRect()
     const fraction = (e.clientX - rect.left) / rect.width
     controls.seekTo(Math.max(0, Math.min(1, fraction)))
+  }
+
+  // Keyboard seeking: arrow keys jump in 5-second steps (same convention as YouTube)
+  const onBarKeyDown = (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+    e.preventDefault()
+    const p = playerRef.current
+    if (!p || typeof p.getCurrentTime !== 'function') return
+    const total = p.getDuration()
+    if (!(total > 0)) return
+    const current = p.getCurrentTime()
+    const next = current + (e.key === 'ArrowRight' ? 5 : -5)
+    controls.seekTo(Math.max(0, Math.min(1, next / total)))
   }
 
   return (
@@ -52,22 +68,25 @@ export default function PlayerPill() {
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div
+      {/* Progress bar — a button so keyboard & screen reader users can focus and seek it */}
+      <button
+        type="button"
         ref={barRef}
         onClick={onBarClick}
-        className="absolute bottom-0 left-6 right-6 h-1 cursor-pointer overflow-hidden rounded-sm bg-white/10 transition-all duration-200 hover:h-2"
+        onKeyDown={onBarKeyDown}
+        aria-label="Seek"
+        className="absolute bottom-0 left-6 right-6 h-1 cursor-pointer overflow-hidden rounded-sm bg-white/10 transition-[height] duration-200 hover:h-2"
         title="Seek"
       >
-        <div className="bg-accent pointer-events-none h-full rounded-sm" style={{ width: `${pct}%` }} />
-      </div>
+        <span className="bg-accent pointer-events-none block h-full rounded-sm" style={{ width: `${pct}%` }} />
+      </button>
 
       {/* Controls */}
       <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={controls.prev}
-          className="cursor-pointer p-1.5 text-[1.1rem] opacity-60 transition-all hover:scale-110 hover:opacity-100"
+          className="cursor-pointer p-1.5 text-[1.1rem] opacity-60 transition-[transform,opacity] hover:scale-110 hover:opacity-100"
           title="Previous"
         >
           ⏮
@@ -75,7 +94,7 @@ export default function PlayerPill() {
         <button
           type="button"
           onClick={controls.togglePlay}
-          className="flex size-9.5 cursor-pointer items-center justify-center rounded-full bg-white text-[0.9rem] text-black transition-all hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+          className="flex size-9.5 cursor-pointer items-center justify-center rounded-full bg-white text-[0.9rem] text-black transition-shadow hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]"
           title={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? '⏸' : '▶'}
@@ -83,7 +102,7 @@ export default function PlayerPill() {
         <button
           type="button"
           onClick={controls.next}
-          className="cursor-pointer p-1.5 text-[1.1rem] opacity-60 transition-all hover:scale-110 hover:opacity-100"
+          className="cursor-pointer p-1.5 text-[1.1rem] opacity-60 transition-[transform,opacity] hover:scale-110 hover:opacity-100"
           title="Next"
         >
           ⏭
@@ -91,7 +110,7 @@ export default function PlayerPill() {
         <button
           type="button"
           onClick={controls.shuffle}
-          className="cursor-pointer p-1.5 text-[0.9rem] opacity-60 transition-all hover:scale-110 hover:opacity-100"
+          className="cursor-pointer p-1.5 text-[0.9rem] opacity-60 transition-[transform,opacity] hover:scale-110 hover:opacity-100"
           title="Shuffle"
         >
           🔀
